@@ -69,9 +69,13 @@ const loginCtrl = async (req, res, next) => {
 
 const userDetailsCtrl = async (req, res) => {
   try {
+    //get userId from params
+    const userId = req.params.id;
+    //find the user
+    const user = await User.findById(userId);
     res.json({
       status: "success",
-      user: "User Details",
+      data: user,
     });
   } catch (error) {
     res.json(error);
@@ -80,53 +84,138 @@ const userDetailsCtrl = async (req, res) => {
 
 const profileCtrl = async (req, res) => {
   try {
+    //get the login user
+    const userId = req.session.userAuth;
+    //find the user
+    const user = await User.findById(userId);
     res.json({
       status: "success",
-      user: "User profile",
+      user: user,
     });
   } catch (error) {
     res.json(error);
   }
 };
 
-const uploadProfilePhotoCtrl = async (req, res) => {
+const uploadProfilePhotoCtrl = async (req, res, next) => {
+  console.log(req.file.path);
   try {
+    //1.Find the user to be updated
+    const userId = req.session.userAuth;
+    const userFound = await User.findById(userId);
+    //2. check if user is found
+    if (!userFound) {
+      return next(appErr("User not found", 403));
+    }
+    //3. Update profile photo
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        profileImage: req.file.path,
+      },
+      {
+        new: true,
+      }
+    );
     res.json({
       status: "success",
-      user: "User profile image upload",
+      data: user,
     });
   } catch (error) {
-    res.json(error);
+    next(appErr(error.message));
   }
 };
 
-const uploadCoverImgCtrl = async (req, res) => {
+const uploadCoverImgCtrl = async (req, res, next) => {
   try {
+    //1.Find the user to be updated
+    const userId = req.session.userAuth;
+    const userFound = await User.findById(userId);
+    //2. check if user is found
+    if (!userFound) {
+      return next(appErr("User not found", 403));
+    }
+    //3. Update profile photo
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        coverImage: req.file.path,
+      },
+      {
+        new: true,
+      }
+    );
     res.json({
       status: "success",
-      user: "User cover image upload",
+      data: user,
     });
   } catch (error) {
-    res.json(error);
+    next(appErr(error.message));
   }
 };
 
-const updatePasswordCtrl = async (req, res) => {
+const updatePasswordCtrl = async (req, res, next) => {
+  const { password } = req.body;
   try {
+    //check if user is updating the password
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      const passwordHashed = await bcrypt.hash(password, salt);
+      //update user
+      await User.findByIdAndUpdate(
+        req.params.id,
+        {
+          password: passwordHashed,
+        },
+        {
+          new: true,
+        }
+      );
+    }
+
     res.json({
       status: "success",
-      user: "User cover image upload",
+      user: "Password has been changed successfull",
     });
   } catch (error) {
-    res.json(error);
+    return next(appErr("Please provide password field"));
   }
 };
-
+//update user
 const updateUserCtrl = async (req, res) => {
+  const { fullname, email, password } = req.body;
+  try {
+    //check if email is not taken
+    if (email) {
+      const emailTaken = await User.findOne({ email });
+      if (emailTaken) {
+        return next(appErr("Email is taken", 400));
+      }
+    }
+    //update the user
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        fullname,
+        email,
+      },
+      {
+        new: true,
+      }
+    );
+    res.json({
+      status: "success",
+      user: user,
+    });
+  } catch (error) {
+    return next(appErr(error.message));
+  }
+};
+const logoutCtrl = async (req, res) => {
   try {
     res.json({
       status: "success",
-      user: "User logout",
+      user: "logout",
     });
   } catch (error) {
     res.json(error);
@@ -141,4 +230,5 @@ module.exports = {
   uploadCoverImgCtrl,
   updatePasswordCtrl,
   updateUserCtrl,
+  logoutCtrl,
 };

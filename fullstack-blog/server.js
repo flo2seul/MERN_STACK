@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const globalErrHandler = require("./middlewares/globalHander");
 const userRoutes = require("./routes/users/users");
 const postRoutes = require("./routes/posts/posts");
@@ -24,6 +25,10 @@ app.use(
     secret: process.env.SESSION_KEY,
     resave: false,
     saveUninitialized: true,
+    store: new MongoStore({
+      mongoUrl: process.env.MONGO_URL,
+      ttl: 24 * 60 * 60, //1day
+    }),
   })
 );
 //users route
