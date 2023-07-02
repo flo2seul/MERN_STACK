@@ -1,7 +1,6 @@
+const appErr = require("../../utils/appErr");
 const Post = require("../../model/post/Post");
 const User = require("../../model/user/User");
-const appErr = require("../../utils/appErr");
-
 const createPostCtrl = async (req, res, next) => {
   const { title, description, category, user } = req.body;
   try {
@@ -34,7 +33,7 @@ const createPostCtrl = async (req, res, next) => {
 
 const fetchPostsCtrl = async (req, res, next) => {
   try {
-    const posts = await Post.find();
+    const posts = await Post.find().populate("comments");
 
     res.json({
       status: "success",
@@ -50,7 +49,7 @@ const fetchPostCtrl = async (req, res, next) => {
     //get the id from params
     const id = req.params.id;
     //find the post
-    const post = await Post.findById(id);
+    const post = await Post.findById(id).populate("comments");
 
     res.json({
       status: "success",
@@ -70,7 +69,7 @@ const deletePostCtrl = async (req, res, next) => {
       return next(appErr("You are not allowed to delete the post", 403));
     }
     //delete post
-    const deletePost = await Post.findByIdAndDelete(req.params.id);
+    await Post.findByIdAndDelete(req.params.id);
     res.json({
       status: "success",
       user: "Post has been deleted successfully",

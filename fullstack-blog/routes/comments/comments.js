@@ -6,9 +6,10 @@ const {
   deleteCommentCtrl,
   updateCommentCtrl,
 } = require("../../controllers/comments/comments");
+const protected = require("../../middlewares/protected");
 const commentRoutes = express.Router();
 // POST/api/v1/comments
-commentRoutes.post("/", createCommentCtrl);
+commentRoutes.post("/:id", protected, createCommentCtrl);
 
 // GET/api/v1/comments
 commentRoutes.get("/", fetchCommentsCtrl);
@@ -17,9 +18,9 @@ commentRoutes.get("/", fetchCommentsCtrl);
 commentRoutes.post("/:id", fetchCommentCtrl);
 
 // DELETE/api/v1/comments/:id
-commentRoutes.delete("/:id", deleteCommentCtrl);
+commentRoutes.delete("/:id", protected, deleteCommentCtrl);
 
 // PUT/api/v1/comments/:id
-commentRoutes.put("/:id", updateCommentCtrl);
+commentRoutes.put("/:id", protected, updateCommentCtrl);
 
 module.exports = commentRoutes;
